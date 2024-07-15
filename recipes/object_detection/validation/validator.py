@@ -17,13 +17,14 @@ from ultralytics.utils.torch_utils import (
     smart_inference_mode,
 )
 
-from ultralytics.data import build_dataloader, build_yolo_dataset, converter
+from ultralytics.data import build_dataloader, converter
 from ultralytics.utils import ops
 from ultralytics.utils.checks import check_requirements
 from ultralytics.utils.metrics import ConfusionMatrix, DetMetrics, box_iou
 from ultralytics.utils.plotting import output_to_target, plot_images
 
 from .autobackend import AutoBackend
+from .datasets import build_yolo_dataset
 
 
 class BaseValidator:
@@ -190,6 +191,7 @@ class BaseValidator:
         self.init_metrics(de_parallel(model))
         self.jdict = []  # empty before each val
         for batch_i, batch in enumerate(bar):
+            batch["img"] = batch["img"].to(torch.uint8)  # for transformations if used
             self.run_callbacks("on_val_batch_start")
             self.batch_i = batch_i
             # Preprocess
@@ -403,7 +405,13 @@ class DetectionValidator(BaseValidator):
     """
 
     def __init__(
-        self, dataloader=None, save_dir=None, pbar=None, args=None, _callbacks=None
+        self,
+        dataloader=None,
+        save_dir=None,
+        pbar=None,
+        args=None,
+        _callbacks=None,
+        transformations=None,
     ):
         """Initialize detection model with necessary variables and settings."""
         super().__init__(dataloader, save_dir, pbar, args, _callbacks)
@@ -415,6 +423,7 @@ class DetectionValidator(BaseValidator):
         self.iouv = torch.linspace(0.5, 0.95, 10)  # iou vector for mAP@0.5:0.95
         self.niou = self.iouv.numel()
         self.lb = []  # for autolabelling
+        self.transformations = transformations
 
     def preprocess(self, batch):
         """Preprocesses batch of images for YOLO training."""
@@ -657,14 +666,20 @@ class DetectionValidator(BaseValidator):
                 Defaults to None.
         """
         return build_yolo_dataset(
-            self.args, img_path, batch, self.data, mode=mode, stride=self.stride
+            self.args,
+            img_path,
+            batch,
+            self.data,
+            mode=mode,
+            stride=self.stride,
+            transformations=self.transformations,
         )
 
     def get_dataloader(self, dataset_path, batch_size):
         """Construct and return dataloader."""
         dataset = self.build_dataset(dataset_path, batch=batch_size, mode="val")
         return build_dataloader(
-            dataset, batch_size, self.args.workers, shuffle=False, rank=-1
+            dataset, batch_size, 0, shuffle=False, rank=-1
         )  # return dataloader
 
     def plot_val_samples(self, batch, ni):

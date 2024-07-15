@@ -17,6 +17,7 @@ from micromind.utils.yolo import (
 )
 import sys
 from validation.validator import DetectionValidator
+from validation.utils.corruptions import Corruptor
 
 from train import YOLO, replace_datafolder
 
@@ -54,7 +55,9 @@ if __name__ == "__main__":
 
     model_weights_path = sys.argv[2]
     args = dict(model="yolov8n.pt", data=hparams.data_cfg, verbose=False, plots=False)
-    validator = DetectionValidator(args=args)
+    validator = DetectionValidator(
+        args=args, transformations=Corruptor(apply=True, severity=3)
+    )
 
     model = YOLO(m_cfg, hparams)
     model.load_modules(model_weights_path)

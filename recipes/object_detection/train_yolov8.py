@@ -71,7 +71,6 @@ class YOLO(mm.MicroMind):
                 preprocessed_batch["img"].to(self.device)
             )
         else:
-
             if torch.is_tensor(batch):
                 backbone = self.modules["backbone"](batch)
                 if "sppf" in self.modules.keys():
