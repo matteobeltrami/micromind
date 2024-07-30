@@ -16,6 +16,7 @@ import torch.nn as nn
 import torch.optim as optim
 from prepare_data import create_loaders
 from yolo_loss import Loss
+from coral_loss import total_coral_loss
 import math
 
 import micromind as mm
@@ -27,6 +28,7 @@ import sys
 import os
 from micromind.utils.yolo import get_variant_multiples
 from validation.validator import DetectionValidator
+from validation.utils.corruptions import Batch_Corruptor
 
 
 class YOLO(mm.MicroMind):
@@ -159,18 +161,45 @@ class YOLO(mm.MicroMind):
         neck = self.modules["neck"](*neck_input)
         head = self.modules["head"](neck)
 
-        return head
+        return [head, neck]
 
     def compute_loss(self, pred, batch):
         """Computes the loss."""
         preprocessed_batch = self.preprocess_batch(batch)
 
         lossi_sum, lossi = self.criterion(
-            pred,
+            pred[0],
             preprocessed_batch,
         )
 
+        # corrupt the batch
+        corruptor = Batch_Corruptor(severity=5)
+        corrupted_batch = corruptor(batch)
+
+        # extract the activations at head input
+        backbone = self.modules["backbone"](
+            corrupted_batch["img"].to(self.device)
+        )
+        neck_input = backbone[1]
+        neck_input.append(self.modules["sppf"](backbone[0]))
+        neck = self.modules["neck"](*neck_input)
+        head = self.modules["head"](neck)
+        breakpoint()
+
+        # `neck` è attivazioni all'input della head con corruptions
+        # `pred[1]` è attivazioni all'input della head senza corruptions
+
+        # calculate the coral loss
+        coral_loss = total_coral_loss(pred[1], neck)
+        breakpoint()
+
+        # corrupted_batch = corrupt(batch)
+        # feature = model(preprocessed_bacth) -> layer
+        # corrupted_feature = model(corrupted_bacth) -> layer
+        # coral_loss = math(feature, corrupted_feature)
+
         return lossi_sum
+        # return lossi_sum + coral_loss
 
     def build_optimizer(
         self, model, name="auto", lr=0.001, momentum=0.9, decay=1e-5, iterations=1e6
