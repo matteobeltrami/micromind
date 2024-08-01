@@ -3,6 +3,8 @@ import numpy as np
 import skimage as sk
 import albumentations as A
 import imgaug.augmenters as iaa
+from torchvision import transforms
+import torch
 
 import random
 from io import BytesIO
@@ -261,4 +263,56 @@ class Corruptor:
         if isinstance(image, dict):
             image = image["image"]
         x["img"] = image
+        return x
+
+
+class Batch_Corruptor:
+    def __init__(self, apply=True, severity=1):
+        self.apply = apply
+        self.severity = severity
+        self.transformations = [
+            gaussian_noise,
+            shot_noise,
+            impulse_noise,
+            speckle_noise,
+            gaussian_blur,
+            glass_blur,
+            defocus_blur,
+            zoom_blur,
+            spatter,
+            contrast,
+            brightness,
+            saturate,
+            jpeg_compression,
+            pixelate,
+            fog,
+            rain,
+            snow,
+            sunflare,
+            frost,
+        ]
+
+    def __call__(self, x):
+        if not self.apply or self.severity == 0:
+            return x
+
+        batch = x["img"]
+        batch_size = batch.shape[0]
+
+        corrupted_images = []
+        for i in range(batch_size):
+            image = batch[i]
+            image = transforms.ToPILImage()(image)
+            image = np.array(image)
+
+            func = random.choice(self.transformations)
+            image = func(image, self.severity)
+
+            if isinstance(image, dict):
+                image = image["image"]
+            image = transforms.ToTensor()(image)
+
+            corrupted_images.append(image)
+
+        x["img"] = torch.stack(corrupted_images)
         return x

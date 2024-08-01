@@ -177,17 +177,15 @@ class YOLO(mm.MicroMind):
         corrupted_batch = corruptor(batch)
 
         # extract the activations at head input
-        backbone = self.modules["backbone"](
-            corrupted_batch["img"].to(self.device)
-        )
+        backbone = self.modules["backbone"](corrupted_batch["img"].to(self.device))
         neck_input = backbone[1]
         neck_input.append(self.modules["sppf"](backbone[0]))
         neck = self.modules["neck"](*neck_input)
-        head = self.modules["head"](neck)
+        # head = self.modules["head"](neck) # not used yet
 
         # `neck` è attivazioni all'input della head con corruptions
         # `pred[1]` è attivazioni all'input della head senza corruptions
-        source = neck 
+        source = neck
         target = pred[1]
 
         # calculate the coral loss
@@ -196,12 +194,6 @@ class YOLO(mm.MicroMind):
         coral_lambda = coral_lambda * self.current_epoch / hparams.epochs
         coral_loss *= coral_lambda
 
-        # corrupted_batch = corrupt(batch)
-        # feature = model(preprocessed_bacth) -> layer
-        # corrupted_feature = model(corrupted_bacth) -> layer
-        # coral_loss = math(feature, corrupted_feature)
-
-        # return lossi_sum
         return lossi_sum + coral_loss
 
     def build_optimizer(
