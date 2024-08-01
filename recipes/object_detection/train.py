@@ -173,7 +173,7 @@ class YOLO(mm.MicroMind):
         )
 
         # corrupt the batch
-        corruptor = Batch_Corruptor(severity=5)
+        corruptor = Batch_Corruptor(severity=hparams.severity)
         corrupted_batch = corruptor(batch)
 
         # extract the activations at head input
@@ -181,7 +181,10 @@ class YOLO(mm.MicroMind):
         neck_input = backbone[1]
         neck_input.append(self.modules["sppf"](backbone[0]))
         neck = self.modules["neck"](*neck_input)
-        # head = self.modules["head"](neck) # not used yet
+
+        # `head` not used yet, but needs to be left here,
+        # don't know why but it changes `neck`
+        head = self.modules["head"](neck)
 
         # `neck` è attivazioni all'input della head con corruptions
         # `pred[1]` è attivazioni all'input della head senza corruptions
