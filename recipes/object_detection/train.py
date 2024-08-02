@@ -324,29 +324,29 @@ class YOLO(mm.MicroMind):
         Precision-Confidence, Precision-Recall, Recall-Confidence curves and the
         predictions and labels of the first three batches of images.
         """
-        args = dict(
-            model="yolov8n.pt", data=hparams.data_cfg, verbose=False, plots=False
-        )
-        validator = DetectionValidator(args=args)
+        # args = dict(
+        #     model="yolov8n.pt", data=hparams.data_cfg, verbose=False, plots=False
+        # )
+        # validator = DetectionValidator(args=args)
 
-        validator(model=self)
+        # validator(model=self)
 
-        val_metrics = [
-            validator.metrics.box.map * 100,
-            validator.metrics.box.map50 * 100,
-            validator.metrics.box.map75 * 100,
-        ]
-        metrics_file = os.path.join(exp_folder, "val_log.txt")
-        metrics_info = (
-            f"Epoch {self.current_epoch}: "
-            f"mAP50-95(B): {round(val_metrics[0], 3)}%; "
-            f"mAP50(B): {round(val_metrics[1], 3)}%; "
-            f"mAP75(B): {round(val_metrics[2], 3)}%\n"
-        )
+        # val_metrics = [
+        #     validator.metrics.box.map * 100,
+        #     validator.metrics.box.map50 * 100,
+        #     validator.metrics.box.map75 * 100,
+        # ]
+        # metrics_file = os.path.join(exp_folder, "val_log.txt")
+        # metrics_info = (
+        #     f"Epoch {self.current_epoch}: "
+        #     f"mAP50-95(B): {round(val_metrics[0], 3)}%; "
+        #     f"mAP50(B): {round(val_metrics[1], 3)}%; "
+        #     f"mAP75(B): {round(val_metrics[2], 3)}%\n"
+        # )
 
-        with open(metrics_file, "a") as file:
-            file.write(metrics_info)
-        return
+        # with open(metrics_file, "a") as file:
+        #     file.write(metrics_info)
+        # return
 
 
 def replace_datafolder(hparams, data_cfg):
