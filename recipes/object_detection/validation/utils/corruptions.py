@@ -12,8 +12,6 @@ import warnings
 
 warnings.simplefilter("ignore", UserWarning)
 
-IMG_SIZE = 640
-
 
 def gaussian_noise(x, severity=1):
     vl = [(400, 400), (1000, 1000), (2000, 2000), (3300, 3300), (7000, 7000)][
@@ -161,9 +159,10 @@ def jpeg_compression(x, severity=1):
 def pixelate(x, severity=1):
     c = [0.6, 0.5, 0.4, 0.3, 0.25][severity - 1]
 
+    height, width, _ = x.shape
     x = Image.fromarray(np.uint8(x)).convert("RGB")
-    x = x.resize((int(IMG_SIZE * c), int(IMG_SIZE * c)), Image.BOX)
-    x = x.resize((IMG_SIZE, IMG_SIZE), Image.BOX)
+    x = x.resize((int(width * c), int(height * c)), Image.BOX)
+    x = x.resize((width, height), Image.BOX)
     x = np.array(x)
     return x
 
