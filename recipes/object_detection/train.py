@@ -27,7 +27,6 @@ from micromind.utils.yolo import load_config
 import sys
 import os
 from micromind.utils.yolo import get_variant_multiples
-from validation.validator import DetectionValidator
 from validation.utils.corruptions import Batch_Corruptor
 
 
@@ -193,7 +192,7 @@ class YOLO(mm.MicroMind):
 
         # calculate the coral loss
         coral_loss = total_coral_loss(source, target)
-        coral_lambda = lossi_sum.item() / coral_loss.item()
+        coral_lambda = lossi_sum.item() / (coral_loss.item() + 1e-10)
         coral_lambda = coral_lambda * self.current_epoch / hparams.epochs
         coral_loss *= coral_lambda
 

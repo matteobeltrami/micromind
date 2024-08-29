@@ -56,7 +56,7 @@ if __name__ == "__main__":
     model_weights_path = sys.argv[2]
     args = dict(model="yolov8n.pt", data=hparams.data_cfg, verbose=False, plots=False)
     validator = DetectionValidator(
-        args=args, transformations=Corruptor(apply=True, severity=3)
+        args=args, transformations=Corruptor(apply=False, severity=0)
     )
 
     model = YOLO(m_cfg, hparams)
